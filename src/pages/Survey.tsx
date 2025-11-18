@@ -51,17 +51,17 @@ const Survey = () => {
     <div className="min-h-screen py-8 px-4">
       <div className="max-w-3xl mx-auto">
         <div className="glass-card rounded-3xl p-8 md:p-12 animate-fade-in">
-          <h1 className="text-3xl md:text-4xl font-bold text-center mb-3 bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-            📋 Poznajmy się!
+          <h1 className="text-3xl md:text-4xl font-bold text-center mb-3 text-black">
+            Poznajmy się!
           </h1>
-          <p className="text-center text-foreground/70 mb-8">
+          <p className="text-center text-black/70 mb-8">
             Ankieta przed filmem - pomoże nam lepiej dostosować treści
           </p>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
             {/* Question 1 */}
             <div className="space-y-3">
-              <Label className="text-base font-semibold">1. Kim jesteś zawodowo?</Label>
+              <Label className="text-base font-semibold text-black">1. Kim jesteś zawodowo?</Label>
               <RadioGroup onValueChange={(value) => setValue("profession", value)}>
                 {[
                   "Programista/Developer",
@@ -83,7 +83,7 @@ const Survey = () => {
 
             {/* Question 2 */}
             <div className="space-y-3">
-              <Label className="text-base font-semibold">2. Jak oceniasz swoje doświadczenie z AI?</Label>
+              <Label className="text-base font-semibold text-black">2. Jak oceniasz swoje doświadczenie z AI?</Label>
               <RadioGroup onValueChange={(value) => setValue("experience", value)}>
                 {[
                   "Początkujący - dopiero zaczynam",
@@ -102,7 +102,7 @@ const Survey = () => {
 
             {/* Question 3 */}
             <div className="space-y-3">
-              <Label className="text-base font-semibold">3. W jakich obszarach korzystasz z AI? (możesz wybrać kilka)</Label>
+              <Label className="text-base font-semibold text-black">3. W jakich obszarach korzystasz z AI? (możesz wybrać kilka)</Label>
               <div className="space-y-2">
                 {[
                   "Tworzenie treści/copywriting",
@@ -128,7 +128,7 @@ const Survey = () => {
 
             {/* Email */}
             <div className="space-y-3">
-              <Label htmlFor="email" className="text-base font-semibold">Twój adres email</Label>
+              <Label htmlFor="email" className="text-base font-semibold text-black">Twój adres email</Label>
               <Input 
                 id="email"
                 type="email"
@@ -141,7 +141,7 @@ const Survey = () => {
 
             {/* Question 4 */}
             <div className="space-y-3">
-              <Label className="text-base font-semibold">4. Co jest Twoim największym wyzwaniem w pracy z AI?</Label>
+              <Label className="text-base font-semibold text-black">4. Co jest Twoim największym wyzwaniem w pracy z AI?</Label>
               <RadioGroup onValueChange={(value) => setValue("challenge", value)}>
                 {[
                   "Nie wiem jak konstruować skuteczne prompty",
@@ -162,7 +162,7 @@ const Survey = () => {
 
             {/* Question 5 */}
             <div className="space-y-3">
-              <Label className="text-base font-semibold">5. Czego oczekujesz po tym filmie?</Label>
+              <Label className="text-base font-semibold text-black">5. Czego oczekujesz po tym filmie?</Label>
               <RadioGroup onValueChange={(value) => setValue("expectations", value)}>
                 {[
                   "Konkretnych szablonów promptów",
@@ -183,7 +183,7 @@ const Survey = () => {
 
             {/* Question 6 */}
             <div className="space-y-3">
-              <Label className="text-base font-semibold">6. Ile czasu tygodniowo spędzasz z AI?</Label>
+              <Label className="text-base font-semibold text-black">6. Ile czasu tygodniowo spędzasz z AI?</Label>
               <RadioGroup onValueChange={(value) => setValue("timeSpent", value)}>
                 {[
                   "Mniej niż 1 godzina",
@@ -203,7 +203,7 @@ const Survey = () => {
 
             {/* Question 7 */}
             <div className="space-y-3">
-              <Label htmlFor="frustration" className="text-base font-semibold">
+              <Label htmlFor="frustration" className="text-base font-semibold text-black">
                 7. Co najbardziej frustruje Cię w obecnej pracy z AI?
               </Label>
               <Textarea 

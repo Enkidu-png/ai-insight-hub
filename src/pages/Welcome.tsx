@@ -14,7 +14,7 @@ const Welcome = () => {
           </div>
         </div>
         
-        <h1 className="text-4xl md:text-5xl font-bold text-center mb-6 bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+        <h1 className="text-4xl md:text-5xl font-bold text-center mb-6 text-foreground">
           Witaj w Świecie AI
         </h1>
         
@@ -25,7 +25,7 @@ const Welcome = () => {
         
         <div className="space-y-4">
           <div className="glass-card rounded-2xl p-6 border-primary/20">
-            <h3 className="font-semibold text-lg mb-2">📚 Co Cię czeka?</h3>
+            <h3 className="font-semibold text-lg mb-2">Co Cię czeka?</h3>
             <ul className="space-y-2 text-foreground/70">
               <li>• Praktyczne techniki prompt engineeringu</li>
               <li>• Gotowe szablony do wykorzystania</li>

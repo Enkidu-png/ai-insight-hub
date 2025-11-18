@@ -14,8 +14,8 @@ const ThankYou = () => {
           </div>
         </div>
         
-        <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-          Dziękujemy! 🎉
+        <h1 className="text-4xl md:text-5xl font-bold mb-6 text-foreground">
+          Dziękujemy!
         </h1>
         
         <p className="text-lg md:text-xl text-foreground/80 mb-8 leading-relaxed">
@@ -24,7 +24,7 @@ const ThankYou = () => {
         </p>
         
         <div className="glass-card rounded-2xl p-6 mb-8 border-primary/20">
-          <h3 className="font-semibold text-lg mb-3">📬 Co dalej?</h3>
+          <h3 className="font-semibold text-lg mb-3">Co dalej?</h3>
           <div className="space-y-2 text-foreground/70 text-left">
             <p>• Wkrótce wyślemy Ci dostęp do premium materiałów</p>
             <p>• Otrzymasz powiadomienie o nowych filmach</p>

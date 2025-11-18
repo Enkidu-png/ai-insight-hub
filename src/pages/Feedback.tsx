@@ -54,8 +54,8 @@ const Feedback = () => {
     <div className="min-h-screen py-8 px-4">
       <div className="max-w-3xl mx-auto">
         <div className="glass-card rounded-3xl p-8 md:p-12 animate-fade-in">
-          <h1 className="text-3xl md:text-4xl font-bold text-center mb-3 bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-            💭 Twoja Opinia Ma Znaczenie
+          <h1 className="text-3xl md:text-4xl font-bold text-center mb-3 text-foreground">
+            Twoja Opinia Ma Znaczenie
           </h1>
           <p className="text-center text-foreground/70 mb-8">
             Pomóż nam tworzyć lepsze treści
