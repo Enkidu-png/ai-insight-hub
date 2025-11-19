@@ -61,7 +61,7 @@ const Video = () => {
           </div>
 
           <Button 
-            onClick={() => navigate("/feedback")}
+            onClick={() => navigate("/exercises")}
             size="lg"
             disabled={!videoWatched}
             className="w-full h-14 text-lg rounded-2xl bg-secondary hover:bg-secondary/90 shadow-lg shadow-secondary/20"
