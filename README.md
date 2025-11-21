@@ -60,6 +60,24 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
+## Local CSV backend
+
+- Start the lightweight backend that writes survey submissions to `data/survey-responses.csv` (no Supabase or external database required):
+  ```bash
+  node server/index.js
+  ```
+- In development, point the frontend at it with a `.env` file:
+  ```bash
+  VITE_API_BASE_URL=http://localhost:4000/api
+  ```
+- In production on Apache, proxy `/api` to the backend so the default `/api` base URL works without extra configuration. The provided `.htaccess` handles client-side routing, caching, and security headers.
+
+## Deployment readiness
+
+- Frontend builds to static assets in `dist/` and ships with an Apache-friendly `.htaccess` under `public/.htaccess`.
+- Backend is a zero-dependency Node.js service writing survey data to CSV (see `server/index.js`).
+- For a Polish step-by-step guide to deploy on Apache with a systemd service and reverse proxy, see `README_PL.md`.
+
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/bba3a875-69c9-4a3e-8aa8-b092af813914) and click on Share -> Publish.
