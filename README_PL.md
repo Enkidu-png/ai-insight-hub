@@ -1,16 +1,11 @@
-# Instrukcja wdrożenia aplikacji na serwer Apache (on‑premises)
+# Instrukcja wdrożenia na serwer Apache (on‑premises)
 
-Ten dokument opisuje, jak uruchomić frontend (Vite/React) oraz lekki backend CSV na własnym serwerze Apache bez zewnętrznych usług.
-
-## Architektura w skrócie
-- Frontend: statyczne pliki zbudowane Vite (React, TypeScript, Tailwind, shadcn-ui).
-- Backend: prosty serwis Node.js zapisujący odpowiedzi ankiet do pliku CSV (`server/index.js`).
-- Komunikacja: frontend wysyła żądania POST do `/api/survey`, Apache proxy kieruje je do backendu; eksport CSV pod `/api/survey/export`.
+Ten dokument opisuje, jak uruchomić aplikację i lekki backend CSV na własnym serwerze Apache bez zewnętrznych usług.
 
 ## Wymagania
-- Linux z Apache 2.4+ i modułami: `mod_rewrite`, `mod_headers`, `mod_deflate`, `mod_expires`, `mod_proxy`, `mod_proxy_http`.
-- Node.js (LTS) do budowania frontendu i uruchomienia backendu.
-- Uprawnienia do zapisu w katalogu z danymi ankiet (domyślnie `data/` obok aplikacji).
+- Linux z Apache 2.4+ i modułami: `mod_rewrite`, `mod_headers`, `mod_deflate`, `mod_expires`, `mod_proxy`, `mod_proxy_http`
+- Node.js (LTS) do budowania frontendu i uruchomienia backendu
+- Uprawnienia do zapisu w katalogu z danymi ankiet (domyślnie `data/` obok aplikacji)
 
 ## Budowanie frontendu (Vite)
 1. Zainstaluj zależności:
