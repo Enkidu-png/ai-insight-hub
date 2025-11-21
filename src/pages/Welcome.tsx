@@ -37,7 +37,7 @@ const Welcome = () => {
           <Button 
             onClick={() => navigate("/survey")}
             size="lg"
-            className="w-full h-14 text-lg rounded-2xl bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30"
+            className="w-full h-14 text-lg rounded-2xl shadow-lg shadow-primary/20 bg-black/[0.16] text-stone-800 hover:bg-black/[0.20]"
           >
             Weź Udział
             <ArrowRight className="ml-2 h-5 w-5" />
