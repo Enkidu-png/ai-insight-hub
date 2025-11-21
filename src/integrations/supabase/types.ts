@@ -14,7 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      survey_responses: {
+        Row: {
+          ai_areas: string[]
+          challenge: string
+          created_at: string
+          data_consent: boolean
+          email: string
+          expectations: string
+          experience: string
+          frustration: string
+          id: string
+          profession: string
+          time_spent: string
+        }
+        Insert: {
+          ai_areas: string[]
+          challenge: string
+          created_at?: string
+          data_consent?: boolean
+          email: string
+          expectations: string
+          experience: string
+          frustration: string
+          id?: string
+          profession: string
+          time_spent: string
+        }
+        Update: {
+          ai_areas?: string[]
+          challenge?: string
+          created_at?: string
+          data_consent?: boolean
+          email?: string
+          expectations?: string
+          experience?: string
+          frustration?: string
+          id?: string
+          profession?: string
+          time_spent?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

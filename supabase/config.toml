@@ -1,1 +1,4 @@
 project_id = "ocqipyupzudrihqdzfbd"
+
+[functions.export-survey-csv]
+verify_jwt = false

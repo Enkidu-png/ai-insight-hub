@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowRight } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 const surveySchema = z.object({
   profession: z.string().min(1, "Wybierz swoją rolę zawodową"),
   experience: z.string().min(1, "Wybierz poziom doświadczenia"),
@@ -38,10 +39,38 @@ const Survey = () => {
   } = useForm<SurveyForm>({
     resolver: zodResolver(surveySchema)
   });
-  const onSubmit = (data: SurveyForm) => {
-    console.log("Survey data:", data);
-    toast.success("Dziękujemy za wypełnienie ankiety!");
-    navigate("/video");
+  const onSubmit = async (data: SurveyForm) => {
+    try {
+      console.log("Submitting survey data...");
+      
+      // Save to database
+      const { error } = await supabase
+        .from('survey_responses')
+        .insert({
+          profession: data.profession,
+          experience: data.experience,
+          ai_areas: data.aiAreas,
+          email: data.email,
+          challenge: data.challenge,
+          expectations: data.expectations,
+          time_spent: data.timeSpent,
+          frustration: data.frustration,
+          data_consent: data.dataConsent,
+        });
+
+      if (error) {
+        console.error('Error saving survey:', error);
+        toast.error("Wystąpił błąd podczas zapisywania ankiety. Spróbuj ponownie.");
+        return;
+      }
+
+      console.log("Survey saved successfully");
+      toast.success("Dziękujemy za wypełnienie ankiety!");
+      navigate("/video");
+    } catch (error) {
+      console.error('Error submitting survey:', error);
+      toast.error("Wystąpił błąd. Spróbuj ponownie.");
+    }
   };
   const handleAreaToggle = (area: string) => {
     const newAreas = selectedAreas.includes(area) ? selectedAreas.filter(a => a !== area) : [...selectedAreas, area];
