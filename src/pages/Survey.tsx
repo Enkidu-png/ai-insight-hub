@@ -144,7 +144,7 @@ const Survey = () => {
               {errors.frustration && <p className="text-sm text-destructive">{errors.frustration.message}</p>}
             </div>
 
-            <Button type="submit" size="lg" className="w-full h-14 text-lg rounded-2xl shadow-lg shadow-primary/20 bg-[#2e3c3c]/15 text-slate-950">
+            <Button type="submit" size="lg" className="w-full h-14 text-lg rounded-2xl shadow-lg shadow-primary/20 bg-black/[0.16] text-stone-800">
               Przejdź do filmu
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
