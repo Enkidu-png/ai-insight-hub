@@ -11,7 +11,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowRight } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
 const surveySchema = z.object({
   profession: z.string().min(1, "Wybierz swoją rolę zawodową"),
   experience: z.string().min(1, "Wybierz poziom doświadczenia"),
@@ -42,24 +43,28 @@ const Survey = () => {
   const onSubmit = async (data: SurveyForm) => {
     try {
       console.log("Submitting survey data...");
-      
-      // Save to database
-      const { error } = await supabase
-        .from('survey_responses')
-        .insert({
+
+      const response = await fetch(`${API_BASE_URL}/survey`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
           profession: data.profession,
           experience: data.experience,
-          ai_areas: data.aiAreas,
+          aiAreas: data.aiAreas,
           email: data.email,
           challenge: data.challenge,
           expectations: data.expectations,
-          time_spent: data.timeSpent,
+          timeSpent: data.timeSpent,
           frustration: data.frustration,
-          data_consent: data.dataConsent,
-        });
+          dataConsent: data.dataConsent
+        })
+      });
 
-      if (error) {
-        console.error('Error saving survey:', error);
+      if (!response.ok) {
+        const errorMessage = await response.text();
+        console.error('Error saving survey:', errorMessage);
         toast.error("Wystąpił błąd podczas zapisywania ankiety. Spróbuj ponownie.");
         return;
       }

@@ -23,7 +23,61 @@
 
 2. **Ensure the `.htaccess` file is present** in the root directory (it's automatically copied from `public/.htaccess` during build)
 
-3. **Verify Apache modules are enabled:**
+3. **Start the CSV backend service on the server:**
+
+   ```bash
+   # Run in a long-lived session (tmux/systemd recommended)
+   node server/index.js
+   ```
+
+   - Default port: `4000` (override with `PORT`)
+   - Default storage path: `./data/survey-responses.csv` (override with `DATA_DIR` or `CSV_PATH`)
+
+   To keep it running after reboots, create a systemd unit (e.g., `/etc/systemd/system/survey-backend.service`):
+   ```ini
+   [Unit]
+   Description=Survey CSV backend
+   After=network.target
+
+   [Service]
+   WorkingDirectory=/var/www/ai-insight-hub
+   ExecStart=/usr/bin/node server/index.js
+   Restart=always
+   Environment=PORT=4000
+   Environment=DATA_DIR=/var/www/survey-data
+   StandardOutput=append:/var/log/survey-backend.log
+   StandardError=inherit
+
+   [Install]
+   WantedBy=multi-user.target
+   ```
+
+   Then enable it:
+   ```bash
+   sudo systemctl enable --now survey-backend
+   ```
+
+4. **Proxy `/api` calls from Apache to the backend (same host, no CORS hassles):**
+
+   Enable the proxy modules:
+   ```bash
+   sudo a2enmod proxy
+   sudo a2enmod proxy_http
+   sudo systemctl restart apache2
+   ```
+
+   Add this to your VirtualHost (replace `/var/www/html` if needed):
+   ```apache
+   <Directory /var/www/html>
+       AllowOverride All
+       Require all granted
+   </Directory>
+
+   ProxyPass /api http://127.0.0.1:4000/api
+   ProxyPassReverse /api http://127.0.0.1:4000/api
+   ```
+
+5. **Verify Apache modules are enabled for the frontend:**
    ```bash
    sudo a2enmod rewrite
    sudo a2enmod deflate
@@ -32,18 +86,7 @@
    sudo systemctl restart apache2
    ```
 
-4. **Configure Apache to allow .htaccess overrides:**
-   
-   Edit your Apache configuration (usually `/etc/apache2/sites-available/000-default.conf` or similar):
-   
-   ```apache
-   <Directory /var/www/html>
-       AllowOverride All
-       Require all granted
-   </Directory>
-   ```
-
-5. **Restart Apache:**
+6. **Restart Apache:**
    ```bash
    sudo systemctl restart apache2
    ```
