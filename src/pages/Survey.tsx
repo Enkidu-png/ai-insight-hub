@@ -19,7 +19,10 @@ const surveySchema = z.object({
   challenge: z.string().min(1, "Wybierz swoje największe wyzwanie"),
   expectations: z.string().min(1, "Wybierz swoje oczekiwania"),
   timeSpent: z.string().min(1, "Wybierz ile czasu spędzasz z AI"),
-  frustration: z.string().min(10, "Opisz swoją frustrację (min. 10 znaków)")
+  frustration: z.string().min(10, "Opisz swoją frustrację (min. 10 znaków)"),
+  dataConsent: z.boolean().refine((val) => val === true, {
+    message: "Musisz wyrazić zgodę na przetwarzanie danych"
+  })
 });
 type SurveyForm = z.infer<typeof surveySchema>;
 const Survey = () => {
@@ -94,7 +97,7 @@ const Survey = () => {
 
             {/* Email */}
             <div className="space-y-3">
-              <Label htmlFor="email" className="text-base font-semibold text-black">Twój adres email</Label>
+              <Label htmlFor="email" className="text-base font-semibold text-black">Pod jakim adresem email Cię znajdziemy?</Label>
               <Input id="email" type="email" placeholder="twoj@email.com" className="glass-input rounded-xl h-12" {...register("email")} />
               {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
             </div>
@@ -142,6 +145,21 @@ const Survey = () => {
               </Label>
               <Textarea id="frustration" placeholder="Opisz swoje frustracje..." className="glass-input rounded-xl min-h-32 resize-none" {...register("frustration")} />
               {errors.frustration && <p className="text-sm text-destructive">{errors.frustration.message}</p>}
+            </div>
+
+            {/* Data Consent */}
+            <div className="space-y-3">
+              <div className="flex items-start space-x-3 glass-input rounded-xl p-4">
+                <Checkbox 
+                  id="dataConsent" 
+                  {...register("dataConsent")}
+                  onCheckedChange={(checked) => setValue("dataConsent", checked === true)}
+                />
+                <Label htmlFor="dataConsent" className="cursor-pointer text-sm leading-relaxed text-black/80">
+                  Wyrażam zgodę na przetwarzanie moich danych osobowych w celu uczestnictwa w szkoleniu oraz otrzymywania informacji marketingowych. Moje dane będą przetwarzane zgodnie z polityką prywatności.
+                </Label>
+              </div>
+              {errors.dataConsent && <p className="text-sm text-destructive">{errors.dataConsent.message}</p>}
             </div>
 
             <Button type="submit" size="lg" className="w-full h-14 text-lg rounded-2xl shadow-lg shadow-primary/20 bg-black/[0.16] text-stone-800">
