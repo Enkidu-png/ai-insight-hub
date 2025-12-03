@@ -9,7 +9,9 @@
 - **User**: `ankieta_user`
 - **Hasło**: `zaq1@WSXDupa`
 
-## Schemat tabeli `survey_responses`
+## Schemat bazy danych
+
+### Tabela `survey_responses` (ankieta wstępna)
 
 ```sql
 CREATE TABLE survey_responses (
@@ -28,6 +30,22 @@ CREATE TABLE survey_responses (
   INDEX idx_created_at (created_at),
   INDEX idx_profession (profession),
   INDEX idx_experience (experience)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+```
+
+### Tabela `feedback_responses` (ankieta po filmie)
+
+```sql
+CREATE TABLE feedback_responses (
+  id CHAR(36) PRIMARY KEY,                    -- UUID feedbacku
+  email VARCHAR(255) NULL,                    -- Email (opcjonalnie z survey_responses)
+  value TEXT NOT NULL,                        -- Największa wartość z filmu
+  questions TEXT NOT NULL,                    -- Pytania o prompt engineering
+  missing TEXT NOT NULL,                      -- JSON: czego zabrakło w filmie
+  next_topics TEXT NOT NULL,                  -- JSON: tematy na następny film
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Data utworzenia
+  INDEX idx_email_feedback (email),
+  INDEX idx_created_at_feedback (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
 
@@ -84,6 +102,49 @@ ORDER BY count DESC;
 SELECT * FROM survey_responses
 WHERE created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
 ORDER BY created_at DESC;
+```
+
+### Zapytania dla feedback (ankieta po filmie)
+
+#### Wszystkie odpowiedzi feedback
+```sql
+SELECT * FROM feedback_responses ORDER BY created_at DESC;
+```
+
+#### Zlicz feedback
+```sql
+SELECT COUNT(*) as total_feedback FROM feedback_responses;
+```
+
+#### Analiza: czego zabrakło (missing)
+```sql
+SELECT missing, COUNT(*) as count
+FROM feedback_responses
+GROUP BY missing
+ORDER BY count DESC;
+```
+
+#### Analiza: tematy na przyszłość (next_topics)
+```sql
+SELECT next_topics, COUNT(*) as count
+FROM feedback_responses
+GROUP BY next_topics
+ORDER BY count DESC;
+```
+
+#### Połącz ankietę wstępną z feedbackiem (przez email)
+```sql
+SELECT
+  s.email,
+  s.profession,
+  s.experience,
+  f.value as feedback_value,
+  f.questions as feedback_questions,
+  f.created_at as feedback_date
+FROM survey_responses s
+LEFT JOIN feedback_responses f ON s.email = f.email
+WHERE f.id IS NOT NULL
+ORDER BY f.created_at DESC;
 ```
 
 ### Eksport do CSV (z MySQL)
@@ -152,6 +213,37 @@ Eksportuje wszystkie odpowiedzi jako plik CSV.
 ```csv
 "id","email","profession","experience","ai_areas","challenge","expectations","time_spent","frustration","data_consent","created_at"
 "123e4567...","test@example.com","Programista/Developer",...
+```
+
+### POST /api/feedback
+Zapisuje odpowiedź feedbacku (ankieta po filmie).
+
+**Request:**
+```json
+{
+  "value": "Największa wartość to praktyczne przykłady promptów...",
+  "questions": "Jak radzić sobie z halucynacjami AI?",
+  "missing": ["Więcej praktycznych przykładów", "Gotowych szablonów do pobrania"],
+  "nextTopics": ["Zaawansowane techniki promptów dla programistów", "AI w marketingu"],
+  "email": "test@example.com"  // opcjonalne
+}
+```
+
+**Response:**
+```json
+{
+  "id": "987fcdeb-51a2-43e1-b789-123456789abc",
+  "storedAt": "2024-11-24T16:45:00.000Z"
+}
+```
+
+### GET /api/feedback/export
+Eksportuje wszystkie odpowiedzi feedbacku jako plik CSV.
+
+**Response:**
+```csv
+"id","email","value","questions","missing","next_topics","created_at"
+"987fcdeb...","test@example.com","Największa wartość...","Jak radzić...",...
 ```
 
 ### GET /health

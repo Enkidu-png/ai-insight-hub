@@ -70,6 +70,8 @@ const Survey = () => {
       }
 
       console.log("Survey saved successfully");
+      // Save email to localStorage to link with feedback later
+      localStorage.setItem('survey_email', data.email);
       toast.success("Dziękujemy za wypełnienie ankiety!");
       navigate("/video");
     } catch (error) {

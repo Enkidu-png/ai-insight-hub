@@ -195,6 +195,105 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
+  // Submit feedback (post-video survey)
+  if (req.method === 'POST' && url.pathname === '/api/feedback') {
+    let rawBody = '';
+    try {
+      rawBody = await readRequestBody(req);
+    } catch (error) {
+      return sendText(res, 413, error.message);
+    }
+
+    let payload;
+    try {
+      payload = rawBody ? JSON.parse(rawBody) : {};
+    } catch (error) {
+      return sendText(res, 400, 'Invalid JSON payload');
+    }
+
+    // Validate feedback payload
+    const requiredFields = ['value', 'questions'];
+    for (const field of requiredFields) {
+      if (!payload[field] || typeof payload[field] !== 'string' || payload[field].trim().length === 0) {
+        return sendText(res, 400, `Field "${field}" is required.`);
+      }
+    }
+
+    if (!Array.isArray(payload.missing) || payload.missing.length === 0) {
+      return sendText(res, 400, 'At least one "missing" item is required.');
+    }
+
+    if (!Array.isArray(payload.nextTopics) || payload.nextTopics.length === 0) {
+      return sendText(res, 400, 'At least one "nextTopics" item is required.');
+    }
+
+    const record = {
+      id: randomUUID(),
+      email: payload.email ? payload.email.trim() : null,
+      value: payload.value.trim(),
+      questions: payload.questions.trim(),
+      missing: payload.missing.map((item) => String(item).trim()),
+      nextTopics: payload.nextTopics.map((topic) => String(topic).trim()),
+      createdAt: new Date().toISOString()
+    };
+
+    try {
+      const sql = `
+        INSERT INTO feedback_responses
+        (id, email, value, questions, missing, next_topics, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `;
+      const params = [
+        record.id,
+        record.email,
+        record.value,
+        record.questions,
+        JSON.stringify(record.missing),
+        JSON.stringify(record.nextTopics),
+        record.createdAt
+      ];
+      await query(sql, params);
+      console.log(`✓ Stored feedback response ${record.id} in database`);
+      return sendJson(res, 201, { id: record.id, storedAt: record.createdAt });
+    } catch (error) {
+      console.error('✗ Failed to store feedback response:', error);
+      return sendText(res, 500, 'Unable to save feedback response at this time.');
+    }
+  }
+
+  // Export feedback responses as CSV
+  if (req.method === 'GET' && url.pathname === '/api/feedback/export') {
+    try {
+      const sql = 'SELECT * FROM feedback_responses ORDER BY created_at DESC';
+      const results = await query(sql);
+
+      const headers = ['id', 'email', 'value', 'questions', 'missing', 'next_topics', 'created_at'];
+      const csvRows = [];
+      csvRows.push(headers.join(','));
+
+      for (const row of results) {
+        const values = headers.map(header => {
+          const value = row[header];
+          if (value === null || value === undefined) return '""';
+          const strValue = String(value).replace(/"/g, '""');
+          return `"${strValue}"`;
+        });
+        csvRows.push(values.join(','));
+      }
+
+      const csvContent = csvRows.join('\n');
+      res.writeHead(200, {
+        ...corsHeaders,
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': `attachment; filename="feedback-responses-${new Date().toISOString().split('T')[0]}.csv"`
+      });
+      return res.end(csvContent);
+    } catch (error) {
+      console.error('✗ Failed to export feedback CSV:', error);
+      return sendText(res, 500, 'Unable to provide CSV export at this time.');
+    }
+  }
+
   return sendText(res, 404, 'Not found');
 });
 

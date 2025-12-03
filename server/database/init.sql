@@ -34,3 +34,16 @@ CREATE TABLE IF NOT EXISTS survey_responses (
 -- Create index for faster searches
 CREATE INDEX idx_profession ON survey_responses(profession);
 CREATE INDEX idx_experience ON survey_responses(experience);
+
+-- Create feedback_responses table (post-video survey)
+CREATE TABLE IF NOT EXISTS feedback_responses (
+  id CHAR(36) PRIMARY KEY,
+  email VARCHAR(255) NULL COMMENT 'Optional: link to survey_responses',
+  value TEXT NOT NULL COMMENT 'Greatest value from the video',
+  questions TEXT NOT NULL COMMENT 'Questions/doubts about prompt engineering',
+  missing TEXT NOT NULL COMMENT 'JSON array: What was missing from the video',
+  next_topics TEXT NOT NULL COMMENT 'JSON array: Topics for next video',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_email_feedback (email),
+  INDEX idx_created_at_feedback (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
