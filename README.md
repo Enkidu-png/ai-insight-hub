@@ -5,7 +5,8 @@ Ten dokument zawiera krok po kroku instrukcję wdrożenia aplikacji ankiety AI n
 ## Co będziesz instalować?
 
 - **Frontend**: Aplikacja webowa z ankietą (pliki HTML, CSS, JavaScript)
-- **Backend**: Prosty serwer zapisujący odpowiedzi do pliku CSV
+- **Backend**: Serwer Node.js zapisujący odpowiedzi do bazy danych MariaDB
+- **Baza danych**: MariaDB na serwerze mariadb-cloud (10.10.9.191)
 
 ---
 
@@ -120,23 +121,35 @@ sudo apt-get install -y nodejs
 
 ---
 
-## KROK 5: Utwórz katalog na dane z ankiet
+## KROK 5: Skonfiguruj połączenie z bazą danych
 
-### 5.1 Utwórz folder na odpowiedzi CSV
+### 5.1 Utwórz plik konfiguracyjny środowiska
 Skopiuj i wklej:
 
 ```bash
-sudo mkdir -p /var/www/survey-data
+nano /var/www/ai-insight-hub/server/.env
 ```
 
-### 5.2 Ustaw uprawnienia zapisu
-Skopiuj i wklej:
+⏳ Otworzy się edytor tekstu.
 
-```bash
-sudo chmod 755 /var/www/survey-data
+### 5.2 Wklej konfigurację bazy danych
+Naciśnij **Ctrl+Shift+V** (lub prawy przycisk myszy → Paste) i wklej:
+
+```
+PORT=4000
+DB_HOST=mariadb-cloud
+DB_PORT=3306
+DB_USER=ankieta_user
+DB_PASSWORD=zaq1@WSXDupa
+DB_NAME=ankieta_db
 ```
 
-✅ **Sprawdź**: Komendy powinny wykonać się bez błędów.
+### 5.3 Zapisz i zamknij plik
+- Naciśnij **Ctrl+O** (zapisz)
+- Naciśnij **Enter** (potwierdź nazwę)
+- Naciśnij **Ctrl+X** (wyjdź)
+
+✅ **Sprawdź**: Powinieneś wrócić do wiersza poleceń.
 
 ---
 
@@ -156,15 +169,19 @@ Naciśnij **Ctrl+Shift+V** (lub prawy przycisk myszy → Paste) i wklej:
 
 ```ini
 [Unit]
-Description=Survey CSV backend
+Description=Survey backend with MariaDB
 After=network.target
 
 [Service]
-WorkingDirectory=/var/www/ai-insight-hub
-ExecStart=/usr/bin/node server/index.js
+WorkingDirectory=/var/www/ai-insight-hub/server
+ExecStart=/usr/bin/node index.js
 Restart=always
 Environment=PORT=4000
-Environment=DATA_DIR=/var/www/survey-data
+Environment=DB_HOST=mariadb-cloud
+Environment=DB_PORT=3306
+Environment=DB_USER=ankieta_user
+Environment=DB_PASSWORD=zaq1@WSXDupa
+Environment=DB_NAME=ankieta_db
 StandardOutput=append:/var/log/survey-backend.log
 StandardError=inherit
 
@@ -333,14 +350,24 @@ https://www.learn.asseco.pl
 ### 9.4 Wypełnij testową ankietę
 Wypełnij formularz i kliknij "Przejdź do filmu".
 
-### 9.5 Sprawdź czy dane zostały zapisane
-Wróć do terminala SSH i wpisz:
+### 9.5 Sprawdź czy dane zostały zapisane w bazie danych
+Sprawdź połączenie z bazą danych przez endpoint health:
 
 ```bash
-cat /var/www/survey-data/survey-responses.csv
+curl http://localhost:4000/health
 ```
 
-✅ **Sprawdź**: Powinieneś zobaczyć nagłówki CSV i Twoją testową odpowiedź.
+✅ **Sprawdź**: Powinna pojawić się odpowiedź JSON z `"database": "connected"`.
+
+### 9.6 Pobierz dane jako CSV (opcjonalnie)
+Możesz wyeksportować dane z bazy:
+
+```bash
+curl http://localhost:4000/api/survey/export -o ankieta-export.csv
+cat ankieta-export.csv
+```
+
+✅ **Sprawdź**: Plik CSV powinien zawierać Twoją testową odpowiedź.
 
 ---
 
@@ -368,9 +395,28 @@ tail -f /var/log/survey-backend.log
 ```
 (Naciśnij **Ctrl+C** aby wyjść z podglądu logów)
 
-### Pobieranie pliku CSV z odpowiedziami
+### Eksport danych z bazy jako CSV
 ```bash
-scp uzytkownik@www.learn.asseco.pl:/var/www/survey-data/survey-responses.csv ./ankiety.csv
+# Pobierz eksport CSV z API
+curl https://www.learn.asseco.pl/api/survey/export -o ankiety.csv
+```
+
+### Dostęp do bazy danych MariaDB
+```bash
+# Połącz się z bazą danych (z serwera www.learn.asseco.pl)
+ssh uzytkownik@www.learn.asseco.pl
+mysql -h mariadb-cloud -u ankieta_user -p ankieta_db
+# Hasło: zaq1@WSXDupa
+
+# Przykładowe zapytania SQL:
+# Pokaż wszystkie odpowiedzi:
+SELECT * FROM survey_responses ORDER BY created_at DESC;
+
+# Zlicz odpowiedzi:
+SELECT COUNT(*) as total FROM survey_responses;
+
+# Wyjdź z MySQL:
+exit
 ```
 
 ### Restart backendu (jeśli potrzebny)
@@ -414,10 +460,28 @@ ssh uzytkownik@www.learn.asseco.pl
 sudo journalctl -u survey-backend -n 50
 ```
 
-### ❌ Brak uprawnień do zapisu CSV
+### ❌ Błąd połączenia z bazą danych
 ```bash
+# Sprawdź czy serwer ma dostęp do bazy
 ssh uzytkownik@www.learn.asseco.pl
-sudo chmod 777 /var/www/survey-data
+ping -c 3 mariadb-cloud
+
+# Sprawdź połączenie MySQL
+mysql -h mariadb-cloud -u ankieta_user -p ankieta_db
+# Hasło: zaq1@WSXDupa
+
+# Jeśli nie możesz się połączyć:
+# 1. Sprawdź czy MariaDB działa na serwerze mariadb-cloud
+# 2. Sprawdź firewall (port 3306 musi być otwarty)
+# 3. Sprawdź czy user ma uprawnienia z '%' hosta
+```
+
+### ❌ Tabela w bazie danych nie istnieje
+```bash
+# Backend automatycznie tworzy tabelę przy starcie
+# Jeśli potrzebujesz ręcznie:
+ssh uzytkownik@www.learn.asseco.pl
+mysql -h mariadb-cloud -u ankieta_user -p ankieta_db < /var/www/ai-insight-hub/server/database/init.sql
 ```
 
 ---

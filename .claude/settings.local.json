@@ -15,7 +15,8 @@
       "Bash(netstat:*)",
       "Bash(findstr:*)",
       "Bash(taskkill /PID 39660 /F)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(npm install:*)"
     ],
     "deny": [],
     "ask": []

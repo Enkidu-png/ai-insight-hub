@@ -1,63 +1,13 @@
 import http from 'http';
-import path from 'path';
-import fs from 'fs/promises';
-import { fileURLToPath } from 'url';
 import { randomUUID } from 'crypto';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { testConnection, query, initializeDatabase, closePool } from './database/connection.js';
 
 const PORT = process.env.PORT || 4000;
-const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
-const CSV_PATH = process.env.CSV_PATH || path.join(DATA_DIR, 'survey-responses.csv');
-
-const CSV_HEADERS = [
-  'id',
-  'email',
-  'profession',
-  'experience',
-  'aiAreas',
-  'challenge',
-  'expectations',
-  'timeSpent',
-  'frustration',
-  'dataConsent',
-  'createdAt'
-];
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': process.env.CORS_ORIGIN || '*',
   'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type'
-};
-
-const escapeCsvValue = (value) => {
-  if (value === undefined || value === null) return '""';
-  const normalizedValue = Array.isArray(value)
-    ? value.join('; ')
-    : typeof value === 'boolean'
-      ? value.toString()
-      : String(value);
-  const escapedValue = normalizedValue.replace(/"/g, '""');
-  return `"${escapedValue}"`;
-};
-
-const ensureCsvHeader = async () => {
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  try {
-    const stats = await fs.stat(CSV_PATH);
-    if (stats.size > 0) return;
-  } catch (error) {
-    if (error.code !== 'ENOENT') throw error;
-  }
-  const headerRow = `${CSV_HEADERS.map((header) => escapeCsvValue(header)).join(',')}\n`;
-  await fs.appendFile(CSV_PATH, headerRow, { encoding: 'utf-8' });
-};
-
-const appendSurveyRow = async (record) => {
-  await ensureCsvHeader();
-  const row = CSV_HEADERS.map((header) => escapeCsvValue(record[header])).join(',');
-  await fs.appendFile(CSV_PATH, `${row}\n`, { encoding: 'utf-8' });
 };
 
 const validateSurveyPayload = (payload) => {
@@ -102,6 +52,58 @@ const sendText = (res, status, message, contentType = 'text/plain') => {
   res.end(message);
 };
 
+// Insert survey response into database
+const saveSurveyResponse = async (record) => {
+  const sql = `
+    INSERT INTO survey_responses
+    (id, email, profession, experience, ai_areas, challenge, expectations, time_spent, frustration, data_consent, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+
+  const params = [
+    record.id,
+    record.email,
+    record.profession,
+    record.experience,
+    JSON.stringify(record.aiAreas), // Store array as JSON
+    record.challenge,
+    record.expectations,
+    record.timeSpent,
+    record.frustration,
+    record.dataConsent ? 1 : 0,
+    record.createdAt
+  ];
+
+  await query(sql, params);
+};
+
+// Export all survey responses as CSV
+const exportSurveyResponses = async () => {
+  const sql = 'SELECT * FROM survey_responses ORDER BY created_at DESC';
+  const results = await query(sql);
+
+  // Convert to CSV
+  const headers = ['id', 'email', 'profession', 'experience', 'ai_areas', 'challenge', 'expectations', 'time_spent', 'frustration', 'data_consent', 'created_at'];
+  const csvRows = [];
+
+  // Add header row
+  csvRows.push(headers.join(','));
+
+  // Add data rows
+  for (const row of results) {
+    const values = headers.map(header => {
+      const value = row[header];
+      // Escape and quote values
+      if (value === null || value === undefined) return '""';
+      const strValue = String(value).replace(/"/g, '""');
+      return `"${strValue}"`;
+    });
+    csvRows.push(values.join(','));
+  }
+
+  return csvRows.join('\n');
+};
+
 const server = http.createServer(async (req, res) => {
   if (!req.url) {
     return sendText(res, 400, 'Bad request');
@@ -114,10 +116,25 @@ const server = http.createServer(async (req, res) => {
 
   const url = new URL(req.url, `http://${req.headers.host}`);
 
+  // Health check endpoint
   if (req.method === 'GET' && url.pathname === '/health') {
-    return sendJson(res, 200, { status: 'ok', dataPath: CSV_PATH });
+    try {
+      const dbConnected = await testConnection();
+      return sendJson(res, 200, {
+        status: 'ok',
+        database: dbConnected ? 'connected' : 'disconnected',
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      return sendJson(res, 500, {
+        status: 'error',
+        database: 'error',
+        message: error.message
+      });
+    }
   }
 
+  // Submit survey response
   if (req.method === 'POST' && url.pathname === '/api/survey') {
     let rawBody = '';
     try {
@@ -153,27 +170,27 @@ const server = http.createServer(async (req, res) => {
     };
 
     try {
-      await appendSurveyRow(record);
-      console.log(`Stored survey response ${record.id} at ${CSV_PATH}`);
+      await saveSurveyResponse(record);
+      console.log(`✓ Stored survey response ${record.id} in database`);
       return sendJson(res, 201, { id: record.id, storedAt: record.createdAt });
     } catch (error) {
-      console.error('Failed to store survey response', error);
+      console.error('✗ Failed to store survey response:', error);
       return sendText(res, 500, 'Unable to save survey response at this time.');
     }
   }
 
+  // Export survey responses as CSV
   if (req.method === 'GET' && url.pathname === '/api/survey/export') {
     try {
-      await ensureCsvHeader();
-      const fileBuffer = await fs.readFile(CSV_PATH);
+      const csvContent = await exportSurveyResponses();
       res.writeHead(200, {
         ...corsHeaders,
-        'Content-Type': 'text/csv',
+        'Content-Type': 'text/csv; charset=utf-8',
         'Content-Disposition': `attachment; filename="survey-responses-${new Date().toISOString().split('T')[0]}.csv"`
       });
-      return res.end(fileBuffer);
+      return res.end(csvContent);
     } catch (error) {
-      console.error('Failed to serve CSV export', error);
+      console.error('✗ Failed to export CSV:', error);
       return sendText(res, 500, 'Unable to provide CSV export at this time.');
     }
   }
@@ -181,7 +198,51 @@ const server = http.createServer(async (req, res) => {
   return sendText(res, 404, 'Not found');
 });
 
-server.listen(PORT, () => {
-  console.log(`Survey backend listening on port ${PORT}`);
-  console.log(`CSV file will be stored at ${CSV_PATH}`);
+// Initialize and start server
+const startServer = async () => {
+  console.log('Starting survey backend...');
+
+  // Test database connection
+  const dbConnected = await testConnection();
+  if (!dbConnected) {
+    console.error('⚠ Warning: Could not connect to database. Server will start anyway.');
+    console.error('   Please check database configuration and ensure MariaDB is running.');
+  }
+
+  // Initialize database tables
+  if (dbConnected) {
+    await initializeDatabase();
+  }
+
+  // Start HTTP server
+  server.listen(PORT, () => {
+    console.log(`✓ Survey backend listening on port ${PORT}`);
+    console.log(`  Database: ${process.env.DB_HOST || 'mariadb-cloud'}:${process.env.DB_PORT || '3306'}`);
+    console.log(`  Database name: ${process.env.DB_NAME || 'ankieta_db'}`);
+  });
+};
+
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+  console.log('SIGTERM signal received: closing HTTP server');
+  server.close(async () => {
+    console.log('HTTP server closed');
+    await closePool();
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', async () => {
+  console.log('\nSIGINT signal received: closing HTTP server');
+  server.close(async () => {
+    console.log('HTTP server closed');
+    await closePool();
+    process.exit(0);
+  });
+});
+
+// Start the server
+startServer().catch((error) => {
+  console.error('Failed to start server:', error);
+  process.exit(1);
 });
