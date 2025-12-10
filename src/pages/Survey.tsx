@@ -14,15 +14,42 @@ import { toast } from "sonner";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
 const surveySchema = z.object({
-  profession: z.string().min(1, "Wybierz swoją rolę zawodową"),
-  experience: z.string().min(1, "Wybierz poziom doświadczenia"),
-  aiAreas: z.array(z.string()).min(1, "Wybierz przynajmniej jeden obszar"),
-  email: z.string().email("Podaj prawidłowy adres email"),
-  challenge: z.string().min(1, "Wybierz swoje największe wyzwanie"),
-  expectations: z.string().min(1, "Wybierz swoje oczekiwania"),
-  timeSpent: z.string().min(1, "Wybierz ile czasu spędzasz z AI"),
-  frustration: z.string().min(10, "Opisz swoją frustrację (min. 10 znaków)"),
-  dataConsent: z.boolean().refine((val) => val === true, {
+  profession: z.string({
+    required_error: "Pole jest wymagane",
+    invalid_type_error: "Nieprawidłowy typ danych"
+  }).min(1, "Wybierz swoją rolę zawodową"),
+  experience: z.string({
+    required_error: "Pole jest wymagane",
+    invalid_type_error: "Nieprawidłowy typ danych"
+  }).min(1, "Wybierz poziom doświadczenia"),
+  aiAreas: z.array(z.string(), {
+    required_error: "Pole jest wymagane",
+    invalid_type_error: "Nieprawidłowy typ danych"
+  }).min(1, "Wybierz przynajmniej jeden obszar"),
+  email: z.string({
+    required_error: "Pole jest wymagane",
+    invalid_type_error: "Nieprawidłowy typ danych"
+  }).email("Podaj prawidłowy adres email"),
+  challenge: z.string({
+    required_error: "Pole jest wymagane",
+    invalid_type_error: "Nieprawidłowy typ danych"
+  }).min(1, "Wybierz swoje największe wyzwanie"),
+  expectations: z.string({
+    required_error: "Pole jest wymagane",
+    invalid_type_error: "Nieprawidłowy typ danych"
+  }).min(1, "Wybierz swoje oczekiwania"),
+  timeSpent: z.string({
+    required_error: "Pole jest wymagane",
+    invalid_type_error: "Nieprawidłowy typ danych"
+  }).min(1, "Wybierz ile czasu spędzasz z AI"),
+  frustration: z.string({
+    required_error: "Pole jest wymagane",
+    invalid_type_error: "Nieprawidłowy typ danych"
+  }).min(10, "Opisz swoją frustrację (min. 10 znaków)"),
+  dataConsent: z.boolean({
+    required_error: "Zgoda jest wymagana",
+    invalid_type_error: "Zaznacz pole zgody"
+  }).refine((val) => val === true, {
     message: "Musisz wyrazić zgodę na przetwarzanie danych"
   })
 });
@@ -97,7 +124,7 @@ const Survey = () => {
             <div className="space-y-3">
               <Label className="text-base font-semibold text-black">1. Kim jesteś zawodowo?</Label>
               <RadioGroup onValueChange={value => setValue("profession", value)}>
-                {["Programista/Developer", "Marketer/Content Creator", "Przedsiębiorca/Właściciel biznesu", "Student/Osoba ucząca się", "Projektant/Designer", "Analityk danych", "Inne"].map(option => <div key={option} className="flex items-center space-x-2 glass-input rounded-xl p-3">
+                {["Programista/Developer/DevOps", "Manager / Lider zespołu", "Profesjonalista IT: Administrator/SysOps/Security/inne role techniczne", "Pracownik merytoryczny / Back-office", "Marketer/Content Creator", "Przedsiębiorca/Właściciel biznesu", "Student/Osoba ucząca się", "Projektant/Designer", "Analityk danych", "Inne"].map(option => <div key={option} className="flex items-center space-x-2 glass-input rounded-xl p-3">
                     <RadioGroupItem value={option} id={option} />
                     <Label htmlFor={option} className="cursor-pointer flex-1">{option}</Label>
                   </div>)}
@@ -121,7 +148,7 @@ const Survey = () => {
             <div className="space-y-3">
               <Label className="text-base font-semibold text-black">3. W jakich obszarach korzystasz z AI? (możesz wybrać kilka)</Label>
               <div className="space-y-2">
-                {["Tworzenie treści/copywriting", "Programowanie i debugging kodu", "Analiza i przetwarzanie danych", "Automatyzacja zadań biznesowych", "Brainstorming i kreatywność", "Nauka i edukacja", "Inne"].map(area => <div key={area} className="flex items-center space-x-2 glass-input rounded-xl p-3">
+                {["Tworzenie treści/copywriting", "Programowanie i debugging kodu", "Analiza i przetwarzanie danych", "Automatyzacja zadań biznesowych", "Wsparcie / automatyzacja zadań technicznych (tworzenie skryptów, analiza logów, danych IoT/SCADA...)", "Brainstorming i kreatywność", "Nauka i edukacja", "Inne"].map(area => <div key={area} className="flex items-center space-x-2 glass-input rounded-xl p-3">
                     <Checkbox id={`area-${area}`} checked={selectedAreas.includes(area)} onCheckedChange={() => handleAreaToggle(area)} />
                     <Label htmlFor={`area-${area}`} className="cursor-pointer flex-1">{area}</Label>
                   </div>)}
