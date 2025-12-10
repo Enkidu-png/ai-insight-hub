@@ -19,7 +19,7 @@ const Video = () => {
           <div className="relative rounded-2xl overflow-hidden glass-card border-2 border-white/30 mb-8 aspect-video">
             <iframe
               className="w-full h-full"
-              src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+              src="https://www.youtube.com/embed/t-SQLY-rIi4"
               title="AI Prompt Engineering Tutorial"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
@@ -31,30 +31,49 @@ const Video = () => {
           <div className="glass-card rounded-2xl p-6 mb-8 border-primary/20">
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
               <Play className="h-5 w-5 text-primary" />
-              O czym jest ten film?
+              Szablony i Techniki Promptingu
             </h2>
-            <div className="space-y-4 text-foreground/80">
-              <p>
-                W tym kompleksowym przewodniku dowiesz się, jak tworzyć prompty, które przynoszą 
-                rzeczywiste rezultaty. Odkryjesz sprawdzone techniki używane przez ekspertów.
-              </p>
-              
+            <div className="space-y-6 text-foreground/80">
               <div>
-                <h3 className="font-semibold text-foreground mb-2">Czego się nauczysz:</h3>
-                <ul className="space-y-2 ml-4">
-                  <li>• Podstawowe zasady skutecznego prompt engineeringu</li>
-                  <li>• Zaawansowane techniki optymalizacji promptów</li>
-                  <li>• Gotowe szablony dla różnych zastosowań</li>
-                  <li>• Praktyczne przykłady z różnych branż</li>
-                  <li>• Najczęstsze błędy i jak ich unikać</li>
+                <h3 className="font-semibold text-foreground mb-3">✅ RTKOFEP — Szablon do wypełnienia</h3>
+                <ul className="space-y-2 ml-4 text-sm">
+                  <li><strong>[R] Rola:</strong> Jakiej roli ma przyjąć model? Jakiego typu ekspertem ma być?</li>
+                  <li><strong>[T] Zadanie (Task):</strong> Co dokładnie ma zostać wykonane? Jaki jest cel końcowy?</li>
+                  <li><strong>[K] Kontekst:</strong> Jakie informacje wprowadzające są potrzebne?</li>
+                  <li><strong>[O] Ograniczenia:</strong> Co model musi respektować? (Antyhalucynacyjne)</li>
+                  <li><strong>[F] Format odpowiedzi:</strong> W jakiej strukturze ma pojawić się finalna odpowiedź?</li>
+                  <li><strong>[E] Ewaluacja jakości:</strong> Po czym poznać, że odpowiedź jest dobra?</li>
+                  <li><strong>[P] Przykłady:</strong> Jakie materiały referencyjne model ma wziąć pod uwagę?</li>
                 </ul>
               </div>
 
               <div>
-                <h3 className="font-semibold text-foreground mb-2">Dla kogo:</h3>
-                <p>
-                  Ten film jest idealny dla wszystkich, którzy chcą poprawić swoją efektywność 
-                  w pracy z AI - od początkujących po zaawansowanych użytkowników.
+                <h3 className="font-semibold text-foreground mb-3">🧠 Chain of Thoughts</h3>
+                <ul className="space-y-1 ml-4 text-sm">
+                  <li>🎯 CEL/ZADANIE: [Jednym zdaniem: co chcesz osiągnąć?]</li>
+                  <li>📥 DANE/ZAŁOŻENIA: [Punktami: liczby, ograniczenia, kontekst]</li>
+                  <li>🧭 PLAN KROKÓW (5 etapów)</li>
+                  <li>🧩 ROZUMOWANIE (krok po kroku)</li>
+                  <li>✅ WYNIK KOŃCOWY: [Wartość + uzasadnienie]</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-foreground mb-3">🌲 Tree of Thoughts</h3>
+                <ul className="space-y-1 ml-4 text-sm">
+                  <li>🎯 PROBLEM: [Opis w 1-2 zdaniach]</li>
+                  <li>🏁 KRYTERIA OCENY: Skuteczność, Koszt/czas, Ryzyko, Zgodność</li>
+                  <li>🌲 ŚCIEŻKI (A-D): [Różne podejścia]</li>
+                  <li>🧮 OCENA: [Tabela punktowa]</li>
+                  <li>🏆 WYBÓR: [Najlepsza ścieżka]</li>
+                  <li>🛠 PLAN 5 KROKÓW</li>
+                </ul>
+              </div>
+
+              <div>
+                <p className="text-sm italic">
+                  Te techniki pozwolą Ci tworzyć bardziej precyzyjne i skuteczne prompty,
+                  które dają lepsze rezultaty w pracy z AI.
                 </p>
               </div>
             </div>
