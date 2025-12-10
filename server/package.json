@@ -1,13 +1,22 @@
 {
   "name": "survey-backend",
   "version": "1.0.0",
-  "description": "Simple CSV-based survey backend",
+  "description": "MySQL/MariaDB-based survey backend",
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "init-db": "node init-db.js"
   },
-  "keywords": ["survey", "csv", "backend"],
+  "keywords": [
+    "survey",
+    "mysql",
+    "mariadb",
+    "backend"
+  ],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "mysql2": "^3.15.3"
+  }
 }

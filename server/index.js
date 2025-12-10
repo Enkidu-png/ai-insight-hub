@@ -1,29 +1,8 @@
 import http from 'http';
-import path from 'path';
-import fs from 'fs/promises';
-import { fileURLToPath } from 'url';
 import { randomUUID } from 'crypto';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { initDatabase, insertSurveyResponse, getAllSurveyResponses, testConnection } from './db.js';
 
 const PORT = process.env.PORT || 4000;
-const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
-const CSV_PATH = process.env.CSV_PATH || path.join(DATA_DIR, 'survey-responses.csv');
-
-const CSV_HEADERS = [
-  'id',
-  'email',
-  'profession',
-  'experience',
-  'aiAreas',
-  'challenge',
-  'expectations',
-  'timeSpent',
-  'frustration',
-  'dataConsent',
-  'createdAt'
-];
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': process.env.CORS_ORIGIN || '*',
@@ -31,49 +10,30 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type'
 };
 
-const escapeCsvValue = (value) => {
-  if (value === undefined || value === null) return '""';
-  const normalizedValue = Array.isArray(value)
-    ? value.join('; ')
-    : typeof value === 'boolean'
-      ? value.toString()
-      : String(value);
-  const escapedValue = normalizedValue.replace(/"/g, '""');
-  return `"${escapedValue}"`;
-};
-
-const ensureCsvHeader = async () => {
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  try {
-    const stats = await fs.stat(CSV_PATH);
-    if (stats.size > 0) return;
-  } catch (error) {
-    if (error.code !== 'ENOENT') throw error;
-  }
-  const headerRow = `${CSV_HEADERS.map((header) => escapeCsvValue(header)).join(',')}\n`;
-  await fs.appendFile(CSV_PATH, headerRow, { encoding: 'utf-8' });
-};
-
-const appendSurveyRow = async (record) => {
-  await ensureCsvHeader();
-  const row = CSV_HEADERS.map((header) => escapeCsvValue(record[header])).join(',');
-  await fs.appendFile(CSV_PATH, `${row}\n`, { encoding: 'utf-8' });
-};
-
 const validateSurveyPayload = (payload) => {
+  const fieldNames = {
+    profession: 'Zawód',
+    experience: 'Doświadczenie',
+    email: 'Email',
+    challenge: 'Wyzwanie',
+    expectations: 'Oczekiwania',
+    timeSpent: 'Czas spędzony',
+    frustration: 'Frustracje'
+  };
+
   const requiredStrings = ['profession', 'experience', 'email', 'challenge', 'expectations', 'timeSpent', 'frustration'];
   for (const field of requiredStrings) {
     if (!payload[field] || typeof payload[field] !== 'string' || payload[field].trim().length === 0) {
-      return `Field "${field}" is required.`;
+      return `Pole "${fieldNames[field]}" jest wymagane.`;
     }
   }
 
   if (!Array.isArray(payload.aiAreas) || payload.aiAreas.length === 0) {
-    return 'At least one AI area is required.';
+    return 'Należy wybrać przynajmniej jeden obszar AI.';
   }
 
   if (typeof payload.dataConsent !== 'boolean' || payload.dataConsent !== true) {
-    return 'Data consent must be granted to submit the survey.';
+    return 'Zgoda na przetwarzanie danych jest wymagana do przesłania ankiety.';
   }
 
   return null;
@@ -85,7 +45,7 @@ const readRequestBody = (req, limit = 1_000_000) => new Promise((resolve, reject
     body += chunk;
     if (body.length > limit) {
       req.destroy();
-      reject(new Error('Payload too large'));
+      reject(new Error('Dane są zbyt duże'));
     }
   });
   req.on('end', () => resolve(body));
@@ -104,7 +64,7 @@ const sendText = (res, status, message, contentType = 'text/plain') => {
 
 const server = http.createServer(async (req, res) => {
   if (!req.url) {
-    return sendText(res, 400, 'Bad request');
+    return sendText(res, 400, 'Nieprawidłowe żądanie');
   }
 
   if (req.method === 'OPTIONS') {
@@ -115,7 +75,11 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
 
   if (req.method === 'GET' && url.pathname === '/health') {
-    return sendJson(res, 200, { status: 'ok', dataPath: CSV_PATH });
+    const dbConnected = await testConnection();
+    return sendJson(res, 200, {
+      status: dbConnected ? 'ok' : 'error',
+      database: dbConnected ? 'connected' : 'disconnected'
+    });
   }
 
   if (req.method === 'POST' && url.pathname === '/api/survey') {
@@ -130,13 +94,16 @@ const server = http.createServer(async (req, res) => {
     try {
       payload = rawBody ? JSON.parse(rawBody) : {};
     } catch (error) {
-      return sendText(res, 400, 'Invalid JSON payload');
+      return sendText(res, 400, 'Nieprawidłowy format danych JSON');
     }
 
     const validationError = validateSurveyPayload(payload);
     if (validationError) {
       return sendText(res, 400, validationError);
     }
+
+    const now = new Date();
+    const mysqlDateTime = now.toISOString().slice(0, 19).replace('T', ' ');
 
     const record = {
       id: randomUUID(),
@@ -149,39 +116,63 @@ const server = http.createServer(async (req, res) => {
       timeSpent: payload.timeSpent.trim(),
       frustration: payload.frustration.trim(),
       dataConsent: payload.dataConsent,
-      createdAt: new Date().toISOString()
+      createdAt: mysqlDateTime
     };
 
     try {
-      await appendSurveyRow(record);
-      console.log(`Stored survey response ${record.id} at ${CSV_PATH}`);
+      await insertSurveyResponse(record);
+      console.log(`Zapisano odpowiedź z ankiety ${record.id} do bazy danych`);
       return sendJson(res, 201, { id: record.id, storedAt: record.createdAt });
     } catch (error) {
-      console.error('Failed to store survey response', error);
-      return sendText(res, 500, 'Unable to save survey response at this time.');
+      console.error('Nie udało się zapisać odpowiedzi z ankiety', error);
+      return sendText(res, 500, 'Nie można zapisać odpowiedzi z ankiety. Spróbuj ponownie później.');
     }
   }
 
   if (req.method === 'GET' && url.pathname === '/api/survey/export') {
     try {
-      await ensureCsvHeader();
-      const fileBuffer = await fs.readFile(CSV_PATH);
+      const responses = await getAllSurveyResponses();
+
+      // Convert to CSV format
+      const headers = ['id', 'email', 'profession', 'experience', 'aiAreas', 'challenge', 'expectations', 'timeSpent', 'frustration', 'dataConsent', 'createdAt'];
+      const csvRows = [headers.join(',')];
+
+      responses.forEach(row => {
+        const values = headers.map(header => {
+          const value = row[header];
+          if (value === null || value === undefined) return '""';
+          const stringValue = String(value).replace(/"/g, '""');
+          return `"${stringValue}"`;
+        });
+        csvRows.push(values.join(','));
+      });
+
+      const csvContent = csvRows.join('\n');
+
       res.writeHead(200, {
         ...corsHeaders,
         'Content-Type': 'text/csv',
         'Content-Disposition': `attachment; filename="survey-responses-${new Date().toISOString().split('T')[0]}.csv"`
       });
-      return res.end(fileBuffer);
+      return res.end(csvContent);
     } catch (error) {
-      console.error('Failed to serve CSV export', error);
-      return sendText(res, 500, 'Unable to provide CSV export at this time.');
+      console.error('Nie udało się wyeksportować danych CSV', error);
+      return sendText(res, 500, 'Nie można wyeksportować danych CSV. Spróbuj ponownie później.');
     }
   }
 
-  return sendText(res, 404, 'Not found');
+  return sendText(res, 404, 'Nie znaleziono');
 });
 
-server.listen(PORT, () => {
-  console.log(`Survey backend listening on port ${PORT}`);
-  console.log(`CSV file will be stored at ${CSV_PATH}`);
-});
+// Initialize database on startup
+initDatabase()
+  .then(() => {
+    server.listen(PORT, () => {
+      console.log(`Serwer ankiet nasłuchuje na porcie ${PORT}`);
+      console.log(`Połączono z bazą danych: ${process.env.DB_NAME || 'ankieta_db'} na ${process.env.DB_HOST || 'mariadb-cloud'}`);
+    });
+  })
+  .catch((error) => {
+    console.error('Nie udało się zainicjalizować bazy danych:', error);
+    process.exit(1);
+  });
