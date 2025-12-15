@@ -116,7 +116,7 @@ const Survey = () => {
             Poznajmy się!
           </h1>
           <p className="text-center text-black/70 mb-8">
-            Ankieta przed filmem - pomoże nam lepiej dostosować treści
+            Ankieta przed filmem - pomoże nam lepiej dostosować treści materiałów edukacyjnych
           </p>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
@@ -154,13 +154,6 @@ const Survey = () => {
                   </div>)}
               </div>
               {errors.aiAreas && <p className="text-sm text-destructive">{errors.aiAreas.message}</p>}
-            </div>
-
-            {/* Email */}
-            <div className="space-y-3">
-              <Label htmlFor="email" className="text-base font-semibold text-black">Pod jakim adresem email Cię znajdziemy?</Label>
-              <Input id="email" type="email" placeholder="twoj@email.com" className="glass-input rounded-xl h-12" {...register("email")} />
-              {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
             </div>
 
             {/* Question 4 */}
@@ -208,16 +201,35 @@ const Survey = () => {
               {errors.frustration && <p className="text-sm text-destructive">{errors.frustration.message}</p>}
             </div>
 
-            {/* Data Consent */}
+            {/* Information about free access */}
+            <div className="glass-card rounded-2xl p-6 bg-primary/5 border border-primary/10">
+              <p className="text-sm text-black/80 leading-relaxed">
+                Chcemy nieodpłatnie dzielić się z Państwem cennym dobrem, jakim jest dostęp do wiedzy. W zamian prosimy o podanie Państwa danych kontaktowych, a nieodpłatny dostęp do nagrania wymaga wyrażenia zgody na przetwarzanie danych w celach marketingowych. Dzięki temu będziecie Państwo otrzymywać nasz newsletter, w którym na bieżąco będziemy dzielić się jeszcze szerszym dostępem do wiedzy! Jeśli nie wyrażasz zgody, prosimy o opuszczenie strony.
+              </p>
+            </div>
+
+            {/* Email */}
             <div className="space-y-3">
+              <Label htmlFor="email" className="text-base font-semibold text-black">Pod jakim adresem email Cię znajdziemy?</Label>
+              <Input id="email" type="email" placeholder="twoj@email.com" className="glass-input rounded-xl h-12" {...register("email")} />
+              {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
+            </div>
+
+            {/* Data Consent */}
+            <div className="space-y-8">
+              <div className="glass-card rounded-2xl p-6 bg-primary/5 border border-primary/10">
+                <p className="text-sm text-black/80 leading-relaxed">
+                  Informujemy, iż Państwa dane osobowe są przetwarzane przez administratora, którym jest Asseco Data Systems S.A. z siedzibą w Gdańsku, ul. Jana z Kolna 11, 80-864 Gdańsk. Przetwarzamy Państwa dane w celu: przesyłania informacji handlowych, w tym marketingu dotyczących produktów i usług z wykorzystaniem środków komunikacji elektronicznej. W związku z przetwarzaniem Państwa danych, posiadacie prawa do: dostępu, sprostowania, usunięcia, przenoszenia danych, ograniczenia przetwarzania i prawo do cofnięcia zgody. Z pełną treścią informacji dotyczących przetwarzania Państwa danych osobowych, w tym o przysługujących prawach i ich zakresie możecie się Państwo zapoznać pod adresem: <a href="https://www.assecods.pl/polityka-prywatnosci-klauzule/newsletter" target="_blank" rel="noopener noreferrer" className="underline text-primary">https://www.assecods.pl/polityka-prywatnosci-klauzule/newsletter</a>
+                </p>
+              </div>
               <div className="flex items-start space-x-3 glass-input rounded-xl p-4">
-                <Checkbox 
-                  id="dataConsent" 
+                <Checkbox
+                  id="dataConsent"
                   {...register("dataConsent")}
                   onCheckedChange={(checked) => setValue("dataConsent", checked === true)}
                 />
                 <Label htmlFor="dataConsent" className="cursor-pointer text-sm leading-relaxed text-black/80">
-                  Wyrażam zgodę na przetwarzanie moich danych osobowych w celu uczestnictwa w szkoleniu oraz otrzymywania informacji marketingowych. Moje dane będą przetwarzane zgodnie z polityką prywatności.
+                  Wyrażam zgodę na przetwarzanie moich danych osobowych w celu przesyłania informacji handlowych (w tym marketingowych) za pomocą środków komunikacji elektronicznej zgodnie z art. 398 Prawa komunikacji elektronicznej.
                 </Label>
               </div>
               {errors.dataConsent && <p className="text-sm text-destructive">{errors.dataConsent.message}</p>}
