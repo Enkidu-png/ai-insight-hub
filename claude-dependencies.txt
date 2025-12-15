@@ -1,0 +1,19 @@
+# Claude AI Dependencies
+# Wklej ten plik do swojego projektu i poproś Claude o zainstalowanie tych pakietów
+
+## Node.js / JavaScript / TypeScript
+npm install @anthropic-ai/claude-agent-sdk
+
+## Python
+python -m pip install claude-agent-sdk
+
+## Instrukcja użycia:
+# 1. Skopiuj ten plik do nowego projektu
+# 2. Powiedz Claude: "zainstaluj zależności z claude-dependencies.txt"
+# 3. Claude automatycznie zainstaluje wszystkie potrzebne pakiety
+
+## Dodatkowe przydatne pakiety AI (opcjonalne):
+# npm install openai                    # OpenAI API client
+# npm install langchain                 # LangChain framework
+# python -m pip install anthropic       # Anthropic Python SDK
+# python -m pip install openai          # OpenAI Python SDK
