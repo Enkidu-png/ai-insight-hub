@@ -431,6 +431,60 @@ Jeśli napotkasz problemy:
 
 ---
 
-**Wersja dokumentu**: 1.0
-**Data ostatniej aktualizacji**: 24 listopada 2024
+## Historia zmian (Changelog)
+
+### 2024-12-15: Aktualizacja zgodności GDPR i UX formularza ankiety
+
+**Zmodyfikowane pliki:**
+1. **src/pages/Survey.tsx** (główne zmiany)
+2. **package.json** - dodano @anthropic-ai/claude-agent-sdk
+3. **package-lock.json** - zaktualizowane zależności
+4. **claude-dependencies.txt** (nowy plik)
+
+**Szczegółowe zmiany w src/pages/Survey.tsx:**
+
+#### 1. Treść i kolejność (linie 119, 207, 211-216):
+- Zaktualizowano opis ankiety: "Ankieta przed filmem - pomoże nam lepiej dostosować treści **materiałów edukacyjnych**"
+- Przeniesiono pole email na koniec formularza (przed zgodami GDPR)
+- Nowa kolejność: Pytania 1-7 → Email → Informacja GDPR → Zgoda
+
+#### 2. Nowa sekcja: Informacja o nieodpłatnym dostępie (linie 204-209):
+```jsx
+<div className="glass-card rounded-2xl p-6 bg-primary/5 border border-primary/10">
+  <p className="text-sm text-black/80 leading-relaxed">
+    Chcemy nieodpłatnie dzielić się z Państwem cennym dobrem, jakim jest dostęp do wiedzy...
+    Jeśli nie wyrażasz zgody, prosimy o opuszczenie strony.
+  </p>
+</div>
+```
+
+#### 3. Zaktualizowana zgoda marketingowa (linia 232):
+- **Nowa treść**: "Wyrażam zgodę na przetwarzanie moich danych osobowych w celu przesyłania informacji handlowych (w tym marketingowych) za pomocą środków komunikacji elektronicznej zgodnie z art. 398 Prawa komunikacji elektronicznej."
+- **Poprzednia**: Ogólna zgoda marketingowa bez podstawy prawnej
+
+#### 4. Ulepszona klauzula RODO (linie 220-224):
+- Osadzona w stylizowanym kontenerze (glass-card)
+- Pełna informacja o administratorze: Asseco Data Systems S.A., Gdańsk
+- Link do polityki prywatności: https://www.assecods.pl/polityka-prywatnosci-klauzule/newsletter
+- Zwiększony odstęp między klauzulą a checkboxem (space-y-8)
+
+#### 5. Usprawnienia wizualne:
+- Spójna stylizacja obu boxów informacyjnych
+- Wyrównane odstępy między elementami (32px - jak między pytaniami)
+- Lepsza czytelność i hierarchia wizualna
+
+**Nowy plik: claude-dependencies.txt**
+- Szablon do instalacji zależności Claude AI SDK w nowych projektach
+- Zawiera komendy dla npm i pip
+- Instrukcje użycia
+
+**Zgodność prawna:**
+- ✅ Art. 398 Prawa komunikacji elektronicznej
+- ✅ RODO - pełna klauzula informacyjna
+- ✅ Jasna informacja o wymaganiu zgody marketingowej
+
+---
+
+**Wersja dokumentu**: 1.1
+**Data ostatniej aktualizacji**: 15 grudnia 2024
 **Aplikacja**: AI Insight Hub Survey
