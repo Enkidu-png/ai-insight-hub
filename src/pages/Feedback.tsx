@@ -11,7 +11,8 @@ import { Send } from "lucide-react";
 import { toast } from "sonner";
 
 const feedbackSchema = z.object({
-  value: z.string().min(10, "Opisz wartość (min. 10 znaków)"),
+  usefulness: z.number().min(1, "Wybierz ocenę przydatności").max(5),
+  usefulnessComment: z.string().optional(),
   questions: z.string().min(5, "Opisz swoje pytania (min. 5 znaków)"),
   missing: z.array(z.string()).min(1, "Wybierz przynajmniej jedną opcję"),
   nextTopics: z.array(z.string()).min(1, "Wybierz przynajmniej jeden temat"),
@@ -23,10 +24,13 @@ const Feedback = () => {
   const navigate = useNavigate();
   const [selectedMissing, setSelectedMissing] = useState<string[]>([]);
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
-  
-  const { register, handleSubmit, formState: { errors }, setValue } = useForm<FeedbackForm>({
+  const [selectedRating, setSelectedRating] = useState<number | null>(null);
+
+  const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<FeedbackForm>({
     resolver: zodResolver(feedbackSchema),
   });
+
+  const usefulnessComment = watch("usefulnessComment");
 
   const onSubmit = (data: FeedbackForm) => {
     console.log("Feedback data:", data);
@@ -62,18 +66,49 @@ const Feedback = () => {
           </p>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-            {/* Question 1 */}
-            <div className="space-y-3">
-              <Label htmlFor="value" className="text-base font-semibold">
-                1. Co było dla Ciebie największą wartością z tego filmu? Co zapamiętasz/zastosujesz?
+            {/* Question 1 - Usefulness Rating */}
+            <div className="space-y-4">
+              <Label className="text-base font-semibold block">
+                1. Jak przydatny dla Ciebie był ten film?
               </Label>
-              <Textarea 
-                id="value"
-                placeholder="Podziel się swoimi przemyśleniami..."
-                className="glass-input rounded-xl min-h-32 resize-none"
-                {...register("value")}
+
+              <div className="flex gap-3 justify-center md:justify-start">
+                {[1, 2, 3, 4, 5].map((rating) => (
+                  <button
+                    key={rating}
+                    type="button"
+                    onClick={() => {
+                      setSelectedRating(rating);
+                      setValue("usefulness", rating);
+                    }}
+                    className={`w-14 h-14 rounded-2xl font-bold text-lg transition-all duration-200 ${
+                      selectedRating === rating
+                        ? "bg-accent text-white scale-110 shadow-lg shadow-accent/30"
+                        : "glass-input hover:bg-accent/20 text-foreground"
+                    }`}
+                  >
+                    {rating}
+                  </button>
+                ))}
+              </div>
+
+              {selectedRating && (
+                <div className="text-sm text-foreground/60 text-center">
+                  {selectedRating === 1 && "Niestety, film nie spełnił Twoich oczekiwań"}
+                  {selectedRating === 2 && "Film zawierał trochę przydatnych informacji"}
+                  {selectedRating === 3 && "Film był przeciętnie przydatny"}
+                  {selectedRating === 4 && "Film był raczej przydatny"}
+                  {selectedRating === 5 && "Świetny film! Bardzo mi się przydał"}
+                </div>
+              )}
+
+              <Textarea
+                id="usefulnessComment"
+                placeholder="(opcjonalnie) Dodaj komentarz do swojej oceny..."
+                className="glass-input rounded-xl min-h-24 resize-none"
+                {...register("usefulnessComment")}
               />
-              {errors.value && <p className="text-sm text-destructive">{errors.value.message}</p>}
+              {errors.usefulness && <p className="text-sm text-destructive">{errors.usefulness.message}</p>}
             </div>
 
             {/* Question 2 */}

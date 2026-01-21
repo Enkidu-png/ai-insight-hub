@@ -15,7 +15,13 @@
       "Bash(netstat:*)",
       "Bash(findstr:*)",
       "Bash(taskkill /PID 39660 /F)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm install:*)",
+      "Bash(pip install:*)",
+      "Bash(python -m pip:*)",
+      "Bash(git fetch:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []
