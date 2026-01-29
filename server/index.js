@@ -1,6 +1,6 @@
 import http from 'http';
 import { randomUUID } from 'crypto';
-import { initDatabase, insertSurveyResponse, getAllSurveyResponses, testConnection } from './db.js';
+import { initDatabase, insertSurveyResponse, getAllSurveyResponses, insertFeedbackResponse, getAllFeedbackResponses, testConnection } from './db.js';
 
 const PORT = process.env.PORT || 4000;
 
@@ -34,6 +34,26 @@ const validateSurveyPayload = (payload) => {
 
   if (typeof payload.dataConsent !== 'boolean' || payload.dataConsent !== true) {
     return 'Zgoda na przetwarzanie danych jest wymagana do przesłania ankiety.';
+  }
+
+  return null;
+};
+
+const validateFeedbackPayload = (payload) => {
+  if (typeof payload.usefulness !== 'number' || payload.usefulness < 1 || payload.usefulness > 5) {
+    return 'Ocena przydatności musi być liczbą od 1 do 5.';
+  }
+
+  if (!payload.questions || typeof payload.questions !== 'string' || payload.questions.trim().length < 5) {
+    return 'Pytania są wymagane (min. 5 znaków).';
+  }
+
+  if (!Array.isArray(payload.missing) || payload.missing.length === 0) {
+    return 'Należy wybrać przynajmniej jedną opcję z tego, czego brakowało.';
+  }
+
+  if (!Array.isArray(payload.nextTopics) || payload.nextTopics.length === 0) {
+    return 'Należy wybrać przynajmniej jeden temat na przyszłość.';
   }
 
   return null;
@@ -153,6 +173,81 @@ const server = http.createServer(async (req, res) => {
         ...corsHeaders,
         'Content-Type': 'text/csv',
         'Content-Disposition': `attachment; filename="survey-responses-${new Date().toISOString().split('T')[0]}.csv"`
+      });
+      return res.end(csvContent);
+    } catch (error) {
+      console.error('Nie udało się wyeksportować danych CSV', error);
+      return sendText(res, 500, 'Nie można wyeksportować danych CSV. Spróbuj ponownie później.');
+    }
+  }
+
+  if (req.method === 'POST' && url.pathname === '/api/feedback') {
+    let rawBody = '';
+    try {
+      rawBody = await readRequestBody(req);
+    } catch (error) {
+      return sendText(res, 413, error.message);
+    }
+
+    let payload;
+    try {
+      payload = rawBody ? JSON.parse(rawBody) : {};
+    } catch (error) {
+      return sendText(res, 400, 'Nieprawidłowy format danych JSON');
+    }
+
+    const validationError = validateFeedbackPayload(payload);
+    if (validationError) {
+      return sendText(res, 400, validationError);
+    }
+
+    const now = new Date();
+    const mysqlDateTime = now.toISOString().slice(0, 19).replace('T', ' ');
+
+    const record = {
+      id: randomUUID(),
+      usefulness: payload.usefulness,
+      usefulnessComment: payload.usefulnessComment ? payload.usefulnessComment.trim() : null,
+      questions: payload.questions.trim(),
+      missing: payload.missing.map((item) => String(item).trim()),
+      nextTopics: payload.nextTopics.map((topic) => String(topic).trim()),
+      createdAt: mysqlDateTime
+    };
+
+    try {
+      await insertFeedbackResponse(record);
+      console.log(`Zapisano feedback ${record.id} do bazy danych`);
+      return sendJson(res, 201, { id: record.id, storedAt: record.createdAt });
+    } catch (error) {
+      console.error('Nie udało się zapisać feedbacku', error);
+      return sendText(res, 500, 'Nie można zapisać feedbacku. Spróbuj ponownie później.');
+    }
+  }
+
+  if (req.method === 'GET' && url.pathname === '/api/feedback/export') {
+    try {
+      const responses = await getAllFeedbackResponses();
+
+      // Convert to CSV format
+      const headers = ['id', 'usefulness', 'usefulnessComment', 'questions', 'missing', 'nextTopics', 'createdAt'];
+      const csvRows = [headers.join(',')];
+
+      responses.forEach(row => {
+        const values = headers.map(header => {
+          const value = row[header];
+          if (value === null || value === undefined) return '""';
+          const stringValue = String(value).replace(/"/g, '""');
+          return `"${stringValue}"`;
+        });
+        csvRows.push(values.join(','));
+      });
+
+      const csvContent = csvRows.join('\n');
+
+      res.writeHead(200, {
+        ...corsHeaders,
+        'Content-Type': 'text/csv',
+        'Content-Disposition': `attachment; filename="feedback-responses-${new Date().toISOString().split('T')[0]}.csv"`
       });
       return res.end(csvContent);
     } catch (error) {

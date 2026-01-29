@@ -33,7 +33,22 @@ export const initDatabase = async () => {
         INDEX idx_createdAt (createdAt)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     `);
-    console.log('Tabela w bazie danych została zainicjalizowana pomyślnie');
+
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS feedback_responses (
+        id VARCHAR(36) PRIMARY KEY,
+        usefulness INT NOT NULL,
+        usefulnessComment TEXT,
+        questions TEXT NOT NULL,
+        missing TEXT NOT NULL,
+        nextTopics TEXT NOT NULL,
+        createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_usefulness (usefulness),
+        INDEX idx_createdAt (createdAt)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    `);
+
+    console.log('Tabele w bazie danych zostały zainicjalizowane pomyślnie');
   } finally {
     connection.release();
   }
@@ -64,6 +79,31 @@ export const insertSurveyResponse = async (record) => {
 export const getAllSurveyResponses = async () => {
   const [rows] = await pool.execute(
     'SELECT * FROM survey_responses ORDER BY createdAt DESC'
+  );
+  return rows;
+};
+
+export const insertFeedbackResponse = async (record) => {
+  const [result] = await pool.execute(
+    `INSERT INTO feedback_responses
+    (id, usefulness, usefulnessComment, questions, missing, nextTopics, createdAt)
+    VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [
+      record.id,
+      record.usefulness,
+      record.usefulnessComment || null,
+      record.questions,
+      Array.isArray(record.missing) ? record.missing.join('; ') : record.missing,
+      Array.isArray(record.nextTopics) ? record.nextTopics.join('; ') : record.nextTopics,
+      record.createdAt
+    ]
+  );
+  return result;
+};
+
+export const getAllFeedbackResponses = async () => {
+  const [rows] = await pool.execute(
+    'SELECT * FROM feedback_responses ORDER BY createdAt DESC'
   );
   return rows;
 };

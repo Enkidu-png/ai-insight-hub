@@ -10,6 +10,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Send } from "lucide-react";
 import { toast } from "sonner";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
+
 const feedbackSchema = z.object({
   usefulness: z.number().min(1, "Wybierz ocenę przydatności").max(5),
   usefulnessComment: z.string().optional(),
@@ -32,10 +34,38 @@ const Feedback = () => {
 
   const usefulnessComment = watch("usefulnessComment");
 
-  const onSubmit = (data: FeedbackForm) => {
-    console.log("Feedback data:", data);
-    toast.success("Dziękujemy za feedback! 🎉");
-    setTimeout(() => navigate("/thank-you"), 1500);
+  const onSubmit = async (data: FeedbackForm) => {
+    try {
+      console.log("Submitting feedback data...");
+
+      const response = await fetch(`${API_BASE_URL}/feedback`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          usefulness: data.usefulness,
+          usefulnessComment: data.usefulnessComment || "",
+          questions: data.questions,
+          missing: data.missing,
+          nextTopics: data.nextTopics
+        })
+      });
+
+      if (!response.ok) {
+        const errorMessage = await response.text();
+        console.error('Error saving feedback:', errorMessage);
+        toast.error("Wystąpił błąd podczas zapisywania feedbacku. Spróbuj ponownie.");
+        return;
+      }
+
+      console.log("Feedback saved successfully");
+      toast.success("Dziękujemy za feedback! 🎉");
+      setTimeout(() => navigate("/thank-you"), 1500);
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      toast.error("Wystąpił błąd. Spróbuj ponownie.");
+    }
   };
 
   const handleMissingToggle = (item: string) => {
