@@ -10,6 +10,7 @@ import Exercises from "./pages/Exercises";
 import Feedback from "./pages/Feedback";
 import ThankYou from "./pages/ThankYou";
 import NotFound from "./pages/NotFound";
+import Version from "./components/Version";
 
 const queryClient = new QueryClient();
 
@@ -18,6 +19,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <Version />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
